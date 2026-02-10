@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   printf2.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: krijooyc <krijooyc@student.42.fr>          +#+  +:+       +#+        */
+/*   By: joe <joe@student.42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/22 16:50:37 by krijooyc          #+#    #+#             */
-/*   Updated: 2025/12/08 21:46:29 by krijooyc         ###   ########.fr       */
+/*   Updated: 2026/02/06 10:38:39 by joe              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ int print_format(char specifier, va_list ap)
 	else if (specifier == 'X')
 		count += print_digit((long)(va_arg(ap, unsigned int)), 16, HEXUP);
 	else if (specifier == 'p')
-		count += print_pointer((long)(va_arg(ap, int))); // it dont have 0x fron HEX and in printf %p can;t haddle  int values at least type (void*)int -> 0xHex of the int
+		count += print_pointer((long)(va_arg(ap, unsigned long))); // it dont have 0x fron HEX and in printf %p can;t haddle  int values at least type (void*)int -> 0xHex of the int
 	else
 		count += write(1, &specifier, 1);
 	return count;
