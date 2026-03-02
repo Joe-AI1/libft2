@@ -6,7 +6,7 @@
 /*   By: joe <joe@student.42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 12:10:36 by joe               #+#    #+#             */
-/*   Updated: 2026/02/19 12:12:56 by joe              ###   ########.fr       */
+/*   Updated: 2026/03/01 07:57:41 by joe              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ void	clear_malloc(t_contain **container, t_contain *c_contain)
 		free(*container);
 		*container = tmp;
 	}
-	if (c_contain->str_buf[0] && c_contain)
+	if (c_contain && c_contain->str_buf[0])
 		*container = c_contain;
 	else
 	{

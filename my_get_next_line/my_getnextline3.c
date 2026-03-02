@@ -1,8 +1,8 @@
-#include "get_next_line.h"
+#include "get_next_line3.h"
 #include <stdlib.h>
 #include <unistd.h>
 
-size_t strlen(char *str)
+size_t ft_strlen(char *str)
 {
 	size_t i;
 

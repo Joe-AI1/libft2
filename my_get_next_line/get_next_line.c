@@ -6,13 +6,14 @@
 /*   By: joe <joe@student.42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 12:10:15 by joe               #+#    #+#             */
-/*   Updated: 2026/03/01 00:37:55 by joe              ###   ########.fr       */
+/*   Updated: 2026/03/01 08:04:30 by joe              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdlib.h>
 #include <unistd.h>
+#define OPEN_MAX 1024
 
 void	append(t_contain **container, char *str)
 {
@@ -51,7 +52,11 @@ void	clear_container(t_contain **container)
 	buf = malloc(BUFFER_SIZE + 1);
 	c_contain = malloc(sizeof(t_contain));
 	if (buf == NULL || c_contain == NULL)
+	{
+		free(buf);
+		free(c_contain);
 		return ;
+	}
 	i = 0;
 	while (l_contain->str_buf[i] && l_contain->str_buf[i] != '\n')
 		i++;
@@ -102,15 +107,15 @@ void	build_container(t_contain **container, int fd)
 
 char	*get_next_line(int fd)
 {
-	static t_contain	*container;
+	static t_contain	*container[OPEN_MAX];
 	char				*line;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+	if (fd < 0 || BUFFER_SIZE <= 0 || fd >= OPEN_MAX)
 		return (NULL);
-	build_container(&container, fd);
-	if (container == NULL)
+	build_container(&container[fd], fd);
+	if (container[fd] == NULL)
 		return (NULL);
-	line = get_line(container);
-	clear_container(&container);
+	line = get_line(container[fd]);
+	clear_container(&container[fd]);
 	return (line);
 }

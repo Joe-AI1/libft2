@@ -2,14 +2,28 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-size_t ft_strlen(char *str)
+size_t stash_len(t_contain *stash)
 {
-	size_t i;
+	int len;
+	int i;
 
-	i = 0;
-	while (str[i])
-		i++;
-	return (i);
+	len = 0;
+	while (stash)
+	{
+		i = 0;
+		while (stash->str_buf[i] && stash->str_buf[i] != '\n')
+		{
+			len++;
+			i++;
+		}
+		if (stash->str_buf[i] == '\n')
+		{
+			len++;
+			break ;
+		}
+		stash = stash->next;
+	}
+	return (len);
 }
 
 int isnewline(t_contain *stash)
@@ -52,89 +66,82 @@ t_contain *new_node(char *buffer, int read_status)
 	return (node);
 }
 
-char *add_stash(char *stash, char *buffer)
-{
-	char	*joined_str;
-	size_t	i;
-	size_t	j;
-
-	if (!stash)
-	{
-		stash = (char *)malloc(1 * sizeof(char));
-		if (stash == NULL)
-			return (NULL);
-		stash[0] = '\0';
-	}
-	joined_str = malloc(sizeof(char) * (strlen(stash) + strlen(buffer) + 1));
-	if (!joined_str)
-		return (NULL);
-	i = 0;
-	while (stash[i] != '\0')
-	{
-		joined_str[i] = stash[i];
-		i++;
-	}
-	j = 0;
-	while (buffer[j])
-		joined_str[i++] = buffer[j++];
-	joined_str[i] = '\0';
-	return (joined_str);
-}
-
-char	*get_line(t_contain *stash)
-{
-	char	*line;
-	size_t	i;
-
-	if (!stash || !stash[0])
-		return (NULL);
-	i = 0;
-	while (stash->str_buf[i] && stash->str_buf[i] != '\n')
-		i++;
-	if (stash->str_buf[i] == '\n')
-		i++;
-	line = malloc(i + 1);
-	if (line == NULL)
-		return (NULL);
-	j = 0;
-	while (stash)
-	{
-		while (stash->str_buf[i])
-		{
-			line[j++] = stash->str_buf[i];
-			if (stash->str_buf[i] == '\n')
-			{
-				line[j] = '\0';
-				return (line);
-			}
-			i++;
-		}
-		stash = stash->next;
-		i = 0;
-	}
-	line[j] = '\0';
-	return (line);
-}
-
-void clear_malloc(t_contain **container, t_contain *c_contain)
+void free_stash(t_contain **stash)
 {
 	t_contain	*tmp;
 
-	while (*container)
+	while (*stash)
 	{
-		tmp = (*container)->next;
-		free((*container)->str_buf);
-		free(*container);
-		*container = tmp;
+		tmp = (*stash)->next; // move to the next node before freeing the current node
+		free((*stash)->str_buf);
+		free(*stash);
+		*stash = tmp;
 	}
-	*container = NULL;
-	if (c_contain->str_buf[0])
-		*container = c_contain;
-	else
+}
+
+t_contain *clear_stash(t_contain *stash, char *line)
+{
+	t_contain *node;
+	char *left_over;
+	size_t i;
+
+	if (line == NULL)
 	{
-		free(c_contain->str_buf);
-		free(c_contain);
+		free_stash(&stash, NULL);
+		return (NULL);
 	}
+	i = 0;
+	while (stash->str_buf[i] && stash->str_buf[i] != '\n')
+		i++;
+	if (!stash -> str_buf[i]) // if no newline, free the whole stash and return NULL
+	{
+		free_stash(&stash, NULL);
+		return (NULL);
+	}
+	left_over = stash -> str_buf + i + 1; // left_over is the part after the newline, we will keep it in the stash for the next call of get_next_line
+	i = 0;
+	while (left_over[i])
+		i++;
+	node = new_node(left_over, i);
+	free_stash(&stash, node);
+	return (node);
+}
+
+
+static int copy_node(t_contain *node, char *line, size_t i)
+{
+	size_t j;
+
+	j = 0;
+	while (node->str_buf[j] && node ->str_buf[j] != '\n')
+		line[i++] = node -> str_buf[j++];
+	if (node->str_buf[j] == '\n')
+		line[i++] = '\n';
+	return (i);
+}
+
+char *extract_line(t_contain *stash)
+{
+	char *line;
+	size_t i;
+	size_t len;
+	t_contain *tmp;
+
+	len = stash_len(stash);
+	line = malloc(len + 1);
+	if (line == NULL)
+		return (NULL);
+	i = 0;
+	tmp = stash;
+	while (tmp)
+	{
+		i = copy_node(tmp, line, i);
+		if (tmp->str_buf[i - 1] == '\n') // if we just copy a newline, we can stop copying because we only want to return one line
+			break ;
+		tmp = tmp->next;
+	}
+	line[i] = '\0';
+	return (line);
 }
 
 t_contain *append_node(t_contain *stash, t_contain *node)
@@ -147,7 +154,7 @@ t_contain *append_node(t_contain *stash, t_contain *node)
 	tmp = stash; // pointer in same address but can move to next node, so we can keep the head of the list 
 	//and can expand the list without losing the head of the list
 	while (tmp->next)
-		tmp = tmp->next;
+		tmp = tmp->next; // move to the last node of the list
 	tmp->next = node;
 	return (stash);
 }
