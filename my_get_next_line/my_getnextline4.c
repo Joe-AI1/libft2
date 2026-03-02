@@ -1,11 +1,11 @@
-#include "get_next_line.h"
+#include "get_next_line4.h"
 #include <stdlib.h>
 #include <unistd.h>
 
 size_t stash_len(t_contain *stash)
 {
-	int len;
-	int i;
+	size_t len;
+	size_t i;
 
 	len = 0;
 	while (stash)
@@ -49,7 +49,9 @@ int isnewline(t_contain *stash)
 t_contain *new_node(char *buffer, int read_status)
 {
 	t_contain *node;
+	int i;
 
+	i = 0;
 	node = malloc(sizeof(t_contain));
 	if (node == NULL)
 		return (NULL);
@@ -59,8 +61,11 @@ t_contain *new_node(char *buffer, int read_status)
 		free(node);
 		return (NULL);
 	}
-	for (int i = 0; i < read_status; i++)
+	while (i < read_status)
+	{
 		node->str_buf[i] = buffer[i];
+		i++;
+	}
 	node->str_buf[read_status] = '\0';
 	node->next = NULL;
 	return (node);
@@ -87,7 +92,7 @@ t_contain *clear_stash(t_contain *stash, char *line)
 
 	if (line == NULL)
 	{
-		free_stash(&stash, NULL);
+		free_stash(&stash);
 		return (NULL);
 	}
 	i = 0;
@@ -95,7 +100,7 @@ t_contain *clear_stash(t_contain *stash, char *line)
 		i++;
 	if (!stash -> str_buf[i]) // if no newline, free the whole stash and return NULL
 	{
-		free_stash(&stash, NULL);
+		free_stash(&stash);
 		return (NULL);
 	}
 	left_over = stash -> str_buf + i + 1; // left_over is the part after the newline, we will keep it in the stash for the next call of get_next_line
@@ -103,7 +108,7 @@ t_contain *clear_stash(t_contain *stash, char *line)
 	while (left_over[i])
 		i++;
 	node = new_node(left_over, i);
-	free_stash(&stash, node);
+	free_stash(&stash);
 	return (node);
 }
 
@@ -159,7 +164,7 @@ t_contain *append_node(t_contain *stash, t_contain *node)
 	return (stash);
 }
 
-t_contain	collect_stash(t_contain *stash, int fd)
+t_contain	*collect_stash(t_contain *stash, int fd)
 {
 	int		read_status;
 	char	*buffer;
@@ -175,7 +180,7 @@ t_contain	collect_stash(t_contain *stash, int fd)
 		if (read_status <= 0) // <= 0 mean EOF(still have data left) but if < 0 means error, both case we should stop reading
 			break;
 		buffer[read_status] = '\0';
-		node = *new_node(buffer, read_status);
+		node = new_node(buffer, read_status);
 		if (node == NULL)
 		{
 			free_stash(&stash);
@@ -198,7 +203,7 @@ char	*get_next_line(int fd)
 	stash = collect_stash(stash, fd);
 	if (stash == NULL)
 		return (NULL);
-	line = get_line(stash);
-	clear_malloc(&stash, NULL);
+	line = extract_line(stash);
+	stash = clear_stash(stash, line);
 	return (line);
 }
